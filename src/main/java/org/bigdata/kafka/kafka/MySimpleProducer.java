@@ -72,6 +72,7 @@ public class MySimpleProducer {
 //                countDownLatch.countDown();
 //            }
 //        });
+        // 等待一段时间，等待回调函数Callback运行完成
 //        Thread.sleep(10000000L);
     }
 }
