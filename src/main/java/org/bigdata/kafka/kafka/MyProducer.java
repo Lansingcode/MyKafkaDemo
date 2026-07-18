@@ -9,6 +9,9 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
+/**
+ *
+ */
 public class MyProducer {
 
     private final static String TOPIC_NAME="test1";
@@ -28,11 +31,11 @@ public class MyProducer {
 
         for (int i=1;i<=10;i++){
             Order order=new Order(Long.valueOf(i),i);
-
             ProducerRecord<String,String> producerRecord=new ProducerRecord<>(TOPIC_NAME,
                     order.getOrderId().toString(),JSON.toJSONString(order));
 
-            producer.send(producerRecord).get();
+            RecordMetadata recordMetadata=producer.send(producerRecord).get();
+            System.out.println("异步方式发送消息结果： "+"topic-"+recordMetadata.topic()+"|partition-"+recordMetadata.partition()+"|offset-"+recordMetadata.offset());
         }
 
     }
