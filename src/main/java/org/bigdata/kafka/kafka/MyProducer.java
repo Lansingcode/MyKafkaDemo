@@ -1,13 +1,13 @@
 package org.bigdata.kafka.kafka;
 
 import com.alibaba.fastjson.JSON;
-import com.sun.org.apache.xpath.internal.operations.Or;
 import org.bigdata.kafka.entity.Order;
 import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.StringSerializer;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -41,10 +41,44 @@ public class MyProducer {
             ProducerRecord<String,String> producerRecord=new ProducerRecord<>(TOPIC_NAME,
                     order.getOrderId().toString(),JSON.toJSONString(order));
 
-            // 发送消息，得到元数据
-            RecordMetadata recordMetadata=producer.send(producerRecord).get();
-            System.out.println("异步方式发送消息结果： "+"topic-"+recordMetadata.topic()+"|partition-"+recordMetadata.partition()+"|offset-"+recordMetadata.offset());
+            //同步发送消息
+            try{
+                RecordMetadata recordMetadata=producer.send(producerRecord).get();
+                // 如果没有收到ack会阻塞
+                System.out.println("同步方式发送消息结果："+"topic-"+recordMetadata.topic()+"|partition-"+
+                        recordMetadata.partition()+"|offset-"+recordMetadata.offset());
+            }catch (InterruptedException e){
+                e.printStackTrace();
+
+                Thread.sleep(1000);
+                try {
+                    RecordMetadata recordMetadata=producer.send(producerRecord).get();
+                } catch (Exception e1){
+
+                }
+            } catch (ExecutionException e){
+                e.printStackTrace();
+            }
+
+
+            // 异步发送消息
+//            producer.send(producerRecord,new Callback(){
+//                public void onCompletion(RecordMetadata recordMetadata,Exception exception){
+//                    if(exception!=null){
+//                        System.err.println("消息发送失败："+exception.getStackTrace());
+//                    }
+//                    if (recordMetadata!=null){
+//                        System.out.println("异步方式发送消息结果： "+"topic-"+recordMetadata.topic()+"|partition-"+recordMetadata.partition()+"|offset-"+recordMetadata.offset());
+//
+//                    }
+//                    countDownLatch.countDown();
+//                }
+//            });
+
         }
+
+        countDownLatch.await(5, TimeUnit.SECONDS);
+        producer.close();
 
     }
 }
