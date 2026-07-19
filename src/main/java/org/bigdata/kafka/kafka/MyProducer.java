@@ -28,15 +28,28 @@ public class MyProducer {
         // 把发送的value从字符串序列号为字节数组
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,StringSerializer.class.getName());
 
+        // 配置ack参数
+        props.put(ProducerConfig.ACKS_CONFIG,"1");
+
+        //失败重试次数
+        props.put(ProducerConfig.RETRIES_CONFIG,3);
+
+        //失败重试间隔
+        props.put(ProducerConfig.RECONNECT_BACKOFF_MS_CONFIG,300);
+
         // 创建生产消息的客户端，传入参数
         Producer<String,String> producer=new KafkaProducer<String,String>(props);
 
         int msgNum=5;
         final CountDownLatch countDownLatch=new CountDownLatch(msgNum);
 
-        for (int i=1;i<=10;i++){
+        for (int i=1;i<=5;i++){
             Order order=new Order(Long.valueOf(i),i);
 
+            // 指定发送分区
+//            ProducerRecord<String,String> producerRecord=new ProducerRecord<>(TOPIC_NAME,0,
+//                    order.getOrderId().toString(),JSON.toJSONString(order));
+            // 未指定分区
             // key：决定了往哪个分区上发，value：具体要发的消息内容
             ProducerRecord<String,String> producerRecord=new ProducerRecord<>(TOPIC_NAME,
                     order.getOrderId().toString(),JSON.toJSONString(order));
